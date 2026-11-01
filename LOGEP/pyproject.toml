@@ -1,0 +1,9 @@
+[project]
+name = "logep"
+version = "0.1.0"
+description = "Local project workspace for LOGEP"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+
+[tool.pytest.ini_options]
+testpaths = ["backend"]

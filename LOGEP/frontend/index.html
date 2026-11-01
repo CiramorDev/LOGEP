@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LOGEP local project management workspace">
+  <title>LOGEP — Project workspace</title>
+  <script>
+    const savedTheme = localStorage.getItem("logep.theme");
+    if (savedTheme === "light" || savedTheme === "dark") {
+      document.documentElement.dataset.theme = savedTheme;
+    }
+  </script>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <img src="/assets/logo.svg" alt="Ciramor logo" class="brand-logo">
+      <div><strong>LOGEP</strong><span>Liste Organisée de Gestion de Projets</span></div>
+    </div>
+    <div class="header-actions">
+      <span id="save-status" class="status-dot">Not connected</span>
+      <button id="theme-toggle" class="button button-quiet" type="button" aria-label="Toggle theme">Light mode</button>
+      <button id="open-file" class="button button-primary" type="button">Open JSON file</button>
+    </div>
+  </header>
+  <main class="workspace">
+    <section class="toolbar" aria-label="Project actions">
+      <div class="toolbar-group">
+        <button id="add-project" class="button button-primary" type="button">+ Project</button>
+        <button id="add-subproject" class="button" type="button" disabled>+ Sub-project</button>
+        <button id="add-item" class="button" type="button" disabled>+ Task / meeting</button>
+        <button id="delete-selected" class="button button-danger" type="button" disabled>Delete</button>
+      </div>
+      <div class="toolbar-group">
+        <label class="search"><span>Search</span><input id="search" type="search" placeholder="Projects, notes, tasks…"></label>
+        <select id="view-mode" class="button button-quiet" aria-label="Choose table view">
+          <option value="all">Show all</option>
+          <option value="incomplete">Only incomplete</option>
+          <option value="collapsed">Collapse all</option>
+        </select>
+        <button id="recap-toggle" class="button button-quiet" type="button" aria-label="Hide recaps">Hide recap</button>
+      </div>
+    </section>
+    <section class="summary" aria-label="Workspace summary">
+      <div><strong id="project-count">0</strong><span>Projects</span></div>
+      <div><strong id="task-count">0</strong><span>Tasks</span></div>
+      <div><strong id="pending-count">0</strong><span>Pending tasks</span></div>
+      <p id="file-name">Choose a JSON file to begin.</p>
+    </section>
+    <section class="table-wrap">
+      <table>
+        <colgroup><col class="name-column"><col class="notes-column"><col class="date-column"><col class="status-column"></colgroup>
+        <thead><tr><th>Project / task</th><th>Notes and recap</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody id="project-table"></tbody>
+      </table>
+      <div id="empty-state" class="empty-state">Open a LOGEP JSON file to get started.</div>
+    </section>
+  </main>
+  <dialog id="edit-dialog">
+    <form method="dialog" id="edit-form">
+      <h2 id="dialog-title">Add item</h2>
+      <label>Name / title<input id="item-title" required maxlength="200"></label>
+      <label>Notes<textarea id="item-content" rows="4" maxlength="5000"></textarea></label>
+      <div class="form-grid"><label>Date<input id="item-date" type="date"></label><label>Status<select id="item-status"></select></label></div>
+      <div class="dialog-actions"><button class="button" value="cancel">Cancel</button><button class="button button-primary" value="save">Save</button></div>
+    </form>
+  </dialog>
+  <footer>Open source project developed on personal time by <strong>Ciramor</strong>.</footer>
+  <script type="module" src="/assets/app.js"></script>
+</body>
+</html>
