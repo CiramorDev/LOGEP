@@ -92,6 +92,11 @@ const selectRow = (id, row) => {
 };
 
 function render() {
+  const tableWrap = $(".table-wrap");
+  const tableScrollTop = tableWrap?.scrollTop || 0;
+  const tableScrollLeft = tableWrap?.scrollLeft || 0;
+  const windowScrollX = window.scrollX;
+  const windowScrollY = window.scrollY;
   const query = $("#search").value.trim().toLowerCase();
   const incomplete = state.viewMode === "incomplete";
   const body = $("#project-table"); body.replaceChildren();
@@ -162,6 +167,11 @@ function render() {
     if (node.children?.length && state.expanded.has(node.id)) visit(node.children, level + 1);
   });
   visit(state.tree); $("#empty-state").hidden = body.children.length > 0; $("#project-count").textContent = projects; $("#task-count").textContent = tasks; $("#pending-count").textContent = pending; $("#view-mode").value = state.viewMode; $("#recap-toggle").textContent = state.showRecap ? "Hide recap" : "Show recap"; $("#recap-toggle").setAttribute("aria-label", state.showRecap ? "Hide recaps" : "Show recaps"); updateActions();
+  if (tableWrap) {
+    tableWrap.scrollTop = tableScrollTop;
+    tableWrap.scrollLeft = tableScrollLeft;
+  }
+  window.scrollTo(windowScrollX, windowScrollY);
 }
 
 function updateActions() {
