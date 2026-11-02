@@ -1,48 +1,56 @@
-/* -------------------------------------------------------------------------- */
-/* Theme                                                                      */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Design tokens
+   ========================================================================== */
 
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
   color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-  --bg: #111;
-  --surface: #1b1b1b;
-  --surface-2: #242424;
-  --border: #3b3b3b;
-  --text: #f4f4f5;
-  --muted: #a1a1aa;
-  --blue: #3b82f6;
-  --blue-soft: #172554;
-  --shadow: 0 12px 30px #0005;
+  --color-bg: #111;
+  --color-surface: #1b1b1b;
+  --color-surface-raised: #242424;
+  --color-border: #3b3b3b;
+  --color-text: #f4f4f5;
+  --color-muted: #a1a1aa;
+  --color-accent: #3b82f6;
+  --color-accent-soft: #172554;
+  --color-item: #94a3b8;
+  --color-item-icon: #cbd5e1;
+  --color-disabled: #4b5563;
+  --shadow-panel: 0 12px 30px #0005;
+
+  --radius-control: 0.5rem;
+  --radius-panel: 0.7rem;
+  --space-control-y: 0.55rem;
+  --space-control-x: 0.8rem;
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg: #f4f4f5;
-  --surface: #fff;
-  --surface-2: #e4e4e7;
-  --border: #d4d4d8;
-  --text: #18181b;
-  --muted: #52525b;
-  --blue-soft: #dbeafe;
-  --shadow: 0 12px 30px #0001;
+  --color-bg: #f4f4f5;
+  --color-surface: #fff;
+  --color-surface-raised: #e4e4e7;
+  --color-border: #d4d4d8;
+  --color-text: #18181b;
+  --color-muted: #52525b;
+  --color-accent-soft: #dbeafe;
+  --shadow-panel: 0 12px 30px #0001;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Base elements                                                              */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Base
+   ========================================================================== */
 
 * {
   box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
   min-height: 100vh;
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 button,
@@ -56,10 +64,11 @@ button {
   cursor: pointer;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Shared layout                                                              */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Layout
+   ========================================================================== */
 
+.app-header,
 .brand,
 .header-actions,
 .toolbar,
@@ -69,20 +78,31 @@ button {
 .dialog-actions {
   display: flex;
   align-items: center;
+}
+
+.app-header,
+.toolbar {
+  justify-content: space-between;
+}
+
+.brand,
+.header-actions,
+.toolbar,
+.toolbar-group,
+.summary,
+.form-grid,
+.dialog-actions {
   gap: 0.75rem;
 }
 
 .app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
   position: sticky;
   top: 0;
   z-index: 2;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .workspace {
@@ -91,18 +111,19 @@ button {
 }
 
 .toolbar {
-  justify-content: space-between;
   flex-wrap: wrap;
   margin-bottom: 1rem;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Brand and header                                                           */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Brand and shared muted text
+   ========================================================================== */
 
 .brand-logo {
   width: 36px;
   height: 36px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .brand strong,
@@ -118,34 +139,34 @@ button {
 footer,
 .summary span,
 .summary p {
+  color: var(--color-muted);
   font-size: 0.78rem;
-  color: var(--muted);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Buttons and form controls                                                  */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Buttons and form controls
+   ========================================================================== */
 
 .button,
 select,
 input,
 textarea {
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background: var(--surface-2);
-  color: var(--text);
-  padding: 0.55rem 0.8rem;
+  padding: var(--space-control-y) var(--space-control-x);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
 }
 
 .button {
   font-size: 0.85rem;
-  white-space: nowrap;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .button-primary {
-  background: var(--blue);
   border-color: #60a5fa;
+  background: var(--color-accent);
   color: #fff;
 }
 
@@ -153,31 +174,32 @@ textarea {
   color: #f87171;
 }
 
-.button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 .button-quiet {
   background: transparent;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 #view-mode {
   min-width: 9.5rem;
   padding-right: 2rem;
-  color: var(--text);
+  color: var(--color-text);
 }
 
-#view-mode option {
-  background: var(--surface);
-  color: var(--text);
+#view-mode option,
+.status-cell select option {
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .search {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--muted);
+  color: var(--color-muted);
   font-size: 0.8rem;
 }
 
@@ -185,21 +207,21 @@ textarea {
   min-width: 250px;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Summary                                                                    */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Summary
+   ========================================================================== */
 
 .summary {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 0.7rem;
-  padding: 1rem;
   margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
 }
 
 .summary div {
   min-width: 100px;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--color-border);
 }
 
 .summary strong,
@@ -212,23 +234,23 @@ textarea {
 }
 
 .summary p {
-  margin-left: auto;
   max-width: 45%;
+  margin-left: auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Task table                                                                 */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Project table
+   ========================================================================== */
 
 .table-wrap {
   overflow: auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 0.7rem;
-  box-shadow: var(--shadow);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
 }
 
 table {
@@ -236,6 +258,10 @@ table {
   min-width: 1100px;
   border-collapse: collapse;
   table-layout: fixed;
+}
+
+.reorder-column {
+  width: 58px;
 }
 
 .name-column {
@@ -256,18 +282,18 @@ table {
 
 th,
 td {
+  padding: 0.6rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
   text-align: left;
-  padding: 0.65rem 0.8rem;
-  border-bottom: 1px solid var(--border);
   vertical-align: top;
 }
 
 th {
+  background: var(--color-surface-raised);
+  color: var(--color-muted);
   font-size: 0.72rem;
-  color: var(--muted);
-  text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: var(--surface-2);
+  text-transform: uppercase;
 }
 
 .node-row {
@@ -275,29 +301,58 @@ th {
 }
 
 .node-row:hover {
-  background: color-mix(in srgb, var(--blue-soft) 35%, transparent);
+  background: color-mix(in srgb, var(--color-accent-soft) 35%, transparent);
 }
 
 .node-row.selected {
-  background: var(--blue-soft);
-  box-shadow: inset 3px 0 var(--blue);
+  background: var(--color-accent-soft);
+  box-shadow: inset 3px 0 var(--color-accent);
 }
 
-.node-project td:first-child {
-  border-left: 3px solid #6366f1;
+.node-project td:nth-child(2),
+.node-subproject td:nth-child(2) {
+  border-left: 3px solid var(--node-color, #6366f1);
 }
 
-.node-subproject td:first-child {
-  border-left: 3px solid #38bdf8;
+.node-item td:nth-child(2) {
+  border-left: 3px solid var(--color-item);
 }
 
-.node-item td:first-child {
-  border-left: 3px solid #94a3b8;
+/* Row ordering controls */
+
+.reorder-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 42px;
+  white-space: nowrap;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Task tree                                                                  */
-/* -------------------------------------------------------------------------- */
+.reorder-button {
+  width: 100%;
+  height: 50%;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--color-muted);
+}
+
+.reorder-button:hover:not(:disabled) {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.reorder-button:disabled {
+  cursor: not-allowed;
+  color: var(--color-disabled);
+}
+
+/* ==========================================================================
+   Tree rows and icons
+   ========================================================================== */
 
 .node-name {
   display: flex;
@@ -314,30 +369,29 @@ th {
 
 .tree-toggle,
 .tree-toggle-spacer {
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
   display: grid;
   place-items: center;
+  width: 100%;
+  height: 100%;
+  flex: 0 0 24px;
 }
 
 .tree-toggle {
   border: 0;
-  background: transparent;
-  color: var(--muted);
   border-radius: 0.3rem;
+  background: transparent;
+  color: var(--color-muted);
 }
 
 .tree-toggle:hover {
-  background: var(--surface-2);
-  color: var(--text);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
 }
 
-.ui-icon {
-  width: 20px;
-  height: 20px;
+.ui-icon,
+.status-icon {
   display: inline-block;
-  flex: 0 0 20px;
+  flex: 0 0 auto;
   background: currentColor;
   mask-position: center;
   mask-repeat: no-repeat;
@@ -347,28 +401,20 @@ th {
   -webkit-mask-size: contain;
 }
 
+.ui-icon {
+  width: 20px;
+  height: 20px;
+}
+
 .node-icon {
-  width: 27px;
-  height: 27px;
   display: grid;
   place-items: center;
+  width: 27px;
+  height: 27px;
   border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--node-color, #6366f1) 25%, var(--color-surface-raised));
+  color: var(--node-color, #a5b4fc);
   font-size: 1.1rem;
-}
-
-.node-project .node-icon {
-  background: #312e81;
-  color: #a5b4fc;
-}
-
-.node-subproject .node-icon {
-  background: #082f49;
-  color: #7dd3fc;
-}
-
-.node-item .node-icon {
-  background: #292929;
-  color: #cbd5e1;
 }
 
 .node-icon .ui-icon {
@@ -376,54 +422,26 @@ th {
   height: 19px;
 }
 
-.status-icon {
-  width: 19px;
-  height: 19px;
-  display: inline-block;
-  flex: 0 0 19px;
-  background: currentColor;
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: contain;
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: contain;
-}
-
-.node-project .node-icon {
-  color: #a5b4fc;
-}
-
-.node-subproject .node-icon {
-  color: #7dd3fc;
-}
-
 .node-item .node-icon {
-  color: #cbd5e1;
+  background: #292929;
+  color: var(--color-item-icon);
 }
 
-.status-to-do .status-icon {
-  color: #fbbf24;
+.title-field,
+td input,
+td select,
+td textarea {
+  width: 100%;
+  padding: 0.35rem;
+  border-color: transparent;
+  background: transparent;
 }
 
-.status-waiting-for-approval .status-icon {
-  color: #d8b4fe;
-}
-
-.status-waiting-for-reply .status-icon {
-  color: #7dd3fc;
-}
-
-.status-frozen .status-icon {
-  color: #67e8f9;
-}
-
-.status-done .status-icon {
-  color: #86efac;
-}
-
-.status-canceled .status-icon {
-  color: #fca5a5;
+td input:focus,
+td select:focus,
+td textarea:focus {
+  border-color: var(--color-accent);
+  outline: none;
 }
 
 .title-field {
@@ -439,36 +457,19 @@ th {
   font-weight: 400;
 }
 
-.title-field,
-td input,
-td select,
-td textarea {
-  width: 100%;
-  border-color: transparent;
-  background: transparent;
-  padding: 0.35rem;
-}
-
-td input:focus,
-td select:focus,
-td textarea:focus {
-  border-color: var(--blue);
-  outline: none;
-}
-
 .notes-field {
   display: block;
   min-height: 34px;
+  overflow: hidden;
   line-height: 1.35;
   resize: none;
-  overflow: hidden;
 }
 
 .recap-line {
-  color: var(--muted);
+  padding: 0.2rem 0.4rem 0.1rem 2.45rem;
+  color: var(--color-muted);
   font-size: 0.75rem;
   line-height: 1.35;
-  padding: 0.2rem 0.4rem 0.1rem 2.45rem;
   white-space: normal;
 }
 
@@ -476,77 +477,77 @@ td textarea:focus {
   min-width: 125px;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Status                                                                     */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Status cells
+   ========================================================================== */
 
 .status-cell {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  border: 1px solid;
-  border-radius: 0.5rem;
   padding: 0.1rem 0.35rem;
+  border: 1px solid;
+  border-radius: var(--radius-control);
   font-size: 0.8rem;
 }
 
 .status-cell select {
-  font-weight: 600;
   padding: 0.35rem 0;
   border: 0;
   background: transparent;
   color: inherit;
+  font-weight: 600;
 }
 
-.status-cell select option {
-  background: var(--surface);
-  color: var(--text);
+.status-icon {
+  width: 19px;
+  height: 19px;
 }
 
 .status-to-do {
-  background: #451a03;
-  color: #fbbf24;
-  border-color: #92400e;
+  --status-bg: #451a03;
+  --status-color: #fbbf24;
+  --status-border: #92400e;
 }
 
 .status-waiting-for-approval {
-  background: #3b0764;
-  color: #d8b4fe;
-  border-color: #7e22ce;
+  --status-bg: #3b0764;
+  --status-color: #d8b4fe;
+  --status-border: #7e22ce;
 }
 
 .status-waiting-for-reply {
-  background: #082f49;
-  color: #7dd3fc;
-  border-color: #0369a1;
+  --status-bg: #082f49;
+  --status-color: #7dd3fc;
+  --status-border: #0369a1;
 }
 
 .status-frozen {
-  background: #083344;
-  color: #67e8f9;
-  border-color: #0e7490;
+  --status-bg: #083344;
+  --status-color: #67e8f9;
+  --status-border: #0e7490;
 }
 
 .status-done {
-  background: #052e16;
-  color: #86efac;
-  border-color: #15803d;
+  --status-bg: #052e16;
+  --status-color: #86efac;
+  --status-border: #15803d;
 }
 
 .status-canceled {
-  background: #450a0a;
-  color: #fca5a5;
-  border-color: #b91c1c;
+  --status-bg: #450a0a;
+  --status-color: #fca5a5;
+  --status-border: #b91c1c;
 }
 
-:root[data-theme="light"] .node-project .node-icon {
-  background: #e0e7ff;
-  color: #4338ca;
+.status-cell {
+  background: var(--status-bg);
+  color: var(--status-color);
+  border-color: var(--status-border);
 }
 
-:root[data-theme="light"] .node-subproject .node-icon {
-  background: #cffafe;
-  color: #0369a1;
+.status-icon {
+  color: var(--status-color);
 }
 
 :root[data-theme="light"] .node-item .node-icon {
@@ -555,67 +556,63 @@ td textarea:focus {
 }
 
 :root[data-theme="light"] .status-to-do {
-  background: #fef3c7;
-  color: #92400e;
-  border-color: #f59e0b;
+  --status-bg: #fef3c7;
+  --status-color: #92400e;
+  --status-border: #f59e0b;
 }
 
 :root[data-theme="light"] .status-waiting-for-approval {
-  background: #f3e8ff;
-  color: #7e22ce;
-  border-color: #c084fc;
+  --status-bg: #f3e8ff;
+  --status-color: #7e22ce;
+  --status-border: #c084fc;
 }
 
 :root[data-theme="light"] .status-waiting-for-reply {
-  background: #e0f2fe;
-  color: #0369a1;
-  border-color: #38bdf8;
+  --status-bg: #e0f2fe;
+  --status-color: #0369a1;
+  --status-border: #38bdf8;
 }
 
 :root[data-theme="light"] .status-frozen {
-  background: #cffafe;
-  color: #0e7490;
-  border-color: #22d3ee;
+  --status-bg: #cffafe;
+  --status-color: #0e7490;
+  --status-border: #22d3ee;
 }
 
 :root[data-theme="light"] .status-done {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #4ade80;
+  --status-bg: #dcfce7;
+  --status-color: #166534;
+  --status-border: #4ade80;
 }
 
 :root[data-theme="light"] .status-canceled {
-  background: #fee2e2;
-  color: #b91c1c;
-  border-color: #f87171;
+  --status-bg: #fee2e2;
+  --status-color: #b91c1c;
+  --status-border: #f87171;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Empty state and footer                                                     */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Empty state, dialog, and footer
+   ========================================================================== */
 
 .empty-state {
-  text-align: center;
   padding: 3rem;
-  color: var(--muted);
+  color: var(--color-muted);
+  text-align: center;
 }
 
 footer {
-  text-align: center;
   padding: 1.5rem;
+  text-align: center;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Dialog                                                                     */
-/* -------------------------------------------------------------------------- */
-
 dialog {
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow);
   width: min(500px, calc(100% - 2rem));
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-panel);
 }
 
 dialog::backdrop {
@@ -634,8 +631,8 @@ form h2 {
 form label {
   display: grid;
   gap: 0.4rem;
+  color: var(--color-muted);
   font-size: 0.82rem;
-  color: var(--muted);
 }
 
 textarea {
@@ -654,19 +651,9 @@ textarea {
   justify-content: flex-end;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Icons                                                                      */
-/* -------------------------------------------------------------------------- */
-
-.brand-logo {
-  object-fit: contain;
-  filter: brightness(0) invert(1);
-}
-
-
-/* -------------------------------------------------------------------------- */
-/* Responsive layout                                                          */
-/* -------------------------------------------------------------------------- */
+/* ==========================================================================
+   Responsive layout
+   ========================================================================== */
 
 @media (max-width: 700px) {
   .app-header,

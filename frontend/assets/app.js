@@ -10,6 +10,8 @@ const STATUS_ICONS = {
 const ICONS = {
   chevronRight: "chevron-right-solid-full.svg",
   chevronDown: "chevron-down-solid-full.svg",
+  arrowUp: "arrow-up-solid-full.svg",
+  arrowDown: "arrow-down-solid-full.svg",
   folder: "folder-solid-full.svg",
   folderTree: "folder-tree-solid-full.svg",
   task: "list-check-solid-full.svg"
@@ -30,6 +32,16 @@ const $ = (selector) => document.querySelector(selector);
 const flatten = (nodes, result = []) => { nodes.forEach((node) => { result.push(node); flatten(node.children || [], result); }); return result; };
 const findNode = (id, nodes = state.tree) => { for (const node of nodes) { if (node.id === id) return node; const found = findNode(id, node.children || []); if (found) return found; } return null; };
 const findParent = (id, nodes = state.tree, parent = null) => { for (const node of nodes) { if (node.id === id) return parent; const found = findParent(id, node.children || [], node); if (found !== undefined) return found; } return undefined; };
+const siblingsFor = (id) => { const parent = findParent(id); return parent ? parent.children || [] : state.tree; };
+const subprojectCount = (node) => (node.children || []).reduce((count, child) => count + (child.type === "subproject" ? 1 + subprojectCount(child) : 0), 0);
+const gradientFor = (node) => {
+  const stages = subprojectCount(node);
+  const ratio = stages / (stages + 1);
+  const purple = [99, 102, 241];
+  const blue = [125, 211, 252];
+  const color = blue.map((value, index) => Math.round(value + (purple[index] - value) * ratio));
+  return `rgb(${color.join(", ")})`;
+};
 const setStatus = (text, kind = "") => { $("#save-status").textContent = text; $("#save-status").className = `status-dot ${kind}`; };
 const icon = (name) => ({ folder: "▰", tree: "⌘", task: "☷" }[name] || "•");
 const iconElement = (name, fallback) => {
@@ -65,6 +77,12 @@ const recapFor = (node) => {
   collect(node);
   return entries.join(" • ");
 };
+const selectRow = (id, row) => {
+  state.selectedId = id;
+  document.querySelectorAll(".node-row.selected").forEach((selectedRow) => selectedRow.classList.remove("selected"));
+  row.classList.add("selected");
+  updateActions();
+};
 
 function render() {
   const query = $("#search").value.trim().toLowerCase();
@@ -77,22 +95,39 @@ function render() {
     if (node.type === "item") { tasks += 1; if (!["Done", "Canceled"].includes(node.status)) pending += 1; }
     if (!hasMatch(node) || (incomplete && !isIncomplete(node))) return;
     const row = document.createElement("tr"); row.className = `node-row node-${node.type} ${node.id === state.selectedId ? "selected" : ""}`;
-    row.onclick = () => { state.selectedId = node.id; render(); };
+    row.onclick = () => selectRow(node.id, row);
+
+    const reorderCell = document.createElement("td");
+    const reorderControls = document.createElement("div"); reorderControls.className = "reorder-cell";
+    const siblings = siblingsFor(node.id); const nodeIndex = siblings.findIndex((sibling) => sibling.id === node.id);
+    [["arrowUp", nodeIndex <= 0, "Move up", -1], ["arrowDown", nodeIndex >= siblings.length - 1, "Move down", 1]].forEach(([direction, disabled, label, offset]) => {
+      const button = document.createElement("button"); button.className = "reorder-button"; button.type = "button"; button.disabled = disabled; button.title = label; button.setAttribute("aria-label", label); button.append(iconElement(direction, label)); button.onclick = (event) => { event.stopPropagation(); selectRow(node.id, row); moveNode(node.id, offset); }; reorderControls.append(button);
+    });
+    reorderCell.append(reorderControls); row.append(reorderCell);
 
     const nameCell = document.createElement("td"); const name = document.createElement("div"); name.className = "node-name"; name.style.setProperty("--indent", `${level * 24}px`);
     const indent = document.createElement("span"); indent.className = "indent"; name.append(indent);
-    if (node.type !== "item") { const toggle = document.createElement("button"); toggle.className = "tree-toggle"; toggle.type = "button"; toggle.title = state.expanded.has(node.id) ? "Collapse" : "Expand"; toggle.append(iconElement(state.expanded.has(node.id) ? "chevronDown" : "chevronRight", state.expanded.has(node.id) ? "⌄" : "›")); toggle.onclick = (event) => { event.stopPropagation(); state.expanded.has(node.id) ? state.expanded.delete(node.id) : state.expanded.add(node.id); render(); }; name.append(toggle); } else { const spacer = document.createElement("span"); spacer.className = "tree-toggle-spacer"; name.append(spacer); }
-    const nodeIcon = document.createElement("span"); nodeIcon.className = "node-icon"; nodeIcon.append(iconElement(node.type === "project" ? "folder" : node.type === "subproject" ? "folderTree" : "task", icon(node.type === "project" ? "folder" : node.type === "subproject" ? "tree" : "task"))); name.append(nodeIcon);
-    const title = makeField("input", node.title, "Name", (value) => updateNode(node.id, "title", value)); title.className = "title-field"; title.onclick = (event) => event.stopPropagation(); name.append(title);
+    if (node.type !== "item") { const toggle = document.createElement("button"); toggle.className = "tree-toggle"; toggle.type = "button"; toggle.title = state.expanded.has(node.id) ? "Collapse" : "Expand"; toggle.append(iconElement(state.expanded.has(node.id) ? "chevronDown" : "chevronRight", state.expanded.has(node.id) ? "⌄" : "›")); toggle.onclick = (event) => { event.stopPropagation(); selectRow(node.id, row); state.expanded.has(node.id) ? state.expanded.delete(node.id) : state.expanded.add(node.id); render(); }; name.append(toggle); } else { const spacer = document.createElement("span"); spacer.className = "tree-toggle-spacer"; name.append(spacer); }
+    const nodeIcon = document.createElement("span"); nodeIcon.className = "node-icon";
+    const nodeColor = node.type === "item" ? "" : gradientFor(node);
+    if (nodeColor) {
+      row.style.setProperty("--node-color", nodeColor);
+      nodeIcon.style.setProperty("--node-color", nodeColor);
+    }
+    const folderIcon = subprojectCount(node) > 0 ? "folderTree" : "folder";
+    const nodeIconElement = iconElement(node.type === "item" ? "task" : folderIcon, icon(node.type === "item" ? "task" : folderIcon));
+    if (nodeColor) nodeIconElement.style.background = `linear-gradient(135deg, #6366f1, ${nodeColor})`;
+    nodeIcon.append(nodeIconElement); name.append(nodeIcon);
+    const title = makeField("input", node.title, "Name", (value) => updateNode(node.id, "title", value)); title.className = "title-field"; title.onclick = () => selectRow(node.id, row); name.append(title);
     nameCell.append(name); row.append(nameCell);
 
-    const contentCell = document.createElement("td"); const notes = makeField("textarea", node.content, "Add detailed notes…", (value) => updateNode(node.id, "content", value)); notes.className = "notes-field"; notes.rows = 1; notes.onclick = (event) => event.stopPropagation(); notes.oninput = () => resizeNotes(notes); contentCell.append(notes);
+    const contentCell = document.createElement("td"); const notes = makeField("textarea", node.content, "Add detailed notes…", (value) => updateNode(node.id, "content", value)); notes.className = "notes-field"; notes.rows = 1; notes.onclick = () => selectRow(node.id, row); notes.oninput = () => resizeNotes(notes); contentCell.append(notes);
     const recapText = recapFor(node); if (state.showRecap && recapText) { const recap = document.createElement("div"); recap.className = "recap-line"; recap.textContent = `↳ ${recapText}`; contentCell.append(recap); } row.append(contentCell);
 
-    const dateCell = document.createElement("td"); const date = makeField("input", node.date, "", (value) => updateNode(node.id, "date", value)); date.type = "date"; date.className = "date-field"; date.onclick = (event) => event.stopPropagation(); dateCell.append(date); row.append(dateCell);
+    const dateCell = document.createElement("td"); const date = makeField("input", node.date, "", (value) => updateNode(node.id, "date", value)); date.type = "date"; date.className = "date-field"; date.onclick = () => selectRow(node.id, row); dateCell.append(date); row.append(dateCell);
     const statusCell = document.createElement("td"); const status = document.createElement("div"); status.className = `status-cell status-${(node.status || "To Do").toLowerCase().replaceAll(" ", "-")}`;
     status.append(statusIconElement(node.status));
-    const select = document.createElement("select"); STATUS_OPTIONS.forEach((option) => select.append(new Option(option, option, false, node.status === option))); select.onchange = () => updateNode(node.id, "status", select.value); select.onclick = (event) => event.stopPropagation(); status.append(select); statusCell.append(status); row.append(statusCell);
+    const select = document.createElement("select"); STATUS_OPTIONS.forEach((option) => select.append(new Option(option, option, false, node.status === option))); select.onchange = () => updateNode(node.id, "status", select.value); select.onclick = () => selectRow(node.id, row); status.append(select); statusCell.append(status); row.append(statusCell);
     body.append(row); resizeNotes(notes);
     if (node.children?.length && state.expanded.has(node.id)) visit(node.children, level + 1);
   });
@@ -101,12 +136,21 @@ function render() {
 
 function updateActions() {
   const selected = findNode(state.selectedId);
-  $("#add-subproject").disabled = !selected || selected.type !== "project";
+  $("#add-subproject").disabled = !selected || !["project", "subproject"].includes(selected.type);
   $("#add-item").disabled = !selected || selected.type === "item";
   $("#delete-selected").disabled = !selected;
 }
 function updateNode(id, key, value) { const node = findNode(id); if (node) { node[key] = value; queueSave(); render(); } }
 function queueSave() { if (!state.file) return; setStatus("Saving…"); clearTimeout(queueSave.timer); queueSave.timer = setTimeout(save, 700); }
+function moveNode(id, offset) {
+  const siblings = siblingsFor(id);
+  const index = siblings.findIndex((node) => node.id === id);
+  const target = index + offset;
+  if (index < 0 || target < 0 || target >= siblings.length) return;
+  [siblings[index], siblings[target]] = [siblings[target], siblings[index]];
+  render();
+  queueSave();
+}
 async function save() { try { const response = await fetch("/api/save", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(state.tree) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); state.mtimeNs = result.mtime_ns; setStatus("Saved", "ok"); } catch (error) { setStatus(error.message, "error"); } }
 async function openFile(path = null) {
   try {
@@ -152,7 +196,21 @@ async function openCachedFile() {
 }
 async function hourlyBackup() { if (!state.file) return; try { const response = await fetch("/api/backup", { method: "POST" }); if (!response.ok) throw new Error((await response.json()).error); } catch (error) { setStatus(`Backup failed: ${error.message}`, "error"); } }
 function openEditor(type) { state.editType = type; $("#dialog-title").textContent = `Add ${type === "item" ? "task / meeting" : type}`; $("#item-title").value = ""; $("#item-content").value = ""; $("#item-date").value = ""; $("#item-status").replaceChildren(...STATUS_OPTIONS.map((status) => new Option(status, status))); $("#edit-dialog").showModal(); }
-function addItem() { const parent = findNode(state.selectedId); const node = { id: crypto.randomUUID(), type: state.editType, title: $("#item-title").value.trim(), content: $("#item-content").value, date: $("#item-date").value, status: $("#item-status").value, expanded: true, children: [] }; if (!node.title) return; if (parent) { parent.children = parent.children || []; parent.children.push(node); state.expanded.add(parent.id); } else state.tree.push(node); state.expanded.add(node.id); $("#edit-dialog").close(); render(); queueSave(); }
+function addItem() {
+  const parent = findNode(state.selectedId);
+  const node = { id: crypto.randomUUID(), type: state.editType, title: $("#item-title").value.trim(), content: $("#item-content").value, date: $("#item-date").value, status: $("#item-status").value, expanded: true, children: [] };
+  if (!node.title) return;
+  if (node.type === "project") state.tree.push(node);
+  else if (parent && ["project", "subproject"].includes(parent.type)) {
+    parent.children = parent.children || [];
+    parent.children.push(node);
+    state.expanded.add(parent.id);
+  } else return;
+  state.expanded.add(node.id);
+  $("#edit-dialog").close();
+  render();
+  queueSave();
+}
 $("#open-file").onclick = () => openFile(); $("#add-project").onclick = () => openEditor("project"); $("#add-subproject").onclick = () => openEditor("subproject"); $("#add-item").onclick = () => openEditor("item"); $("#edit-form").onsubmit = (event) => { event.preventDefault(); addItem(); }; $("#search").oninput = render;
 $("#view-mode").onchange = () => {
   state.viewMode = $("#view-mode").value;
@@ -163,6 +221,16 @@ $("#view-mode").onchange = () => {
 };
 $("#recap-toggle").onclick = () => { state.showRecap = !state.showRecap; localStorage.setItem("logep.showRecap", String(state.showRecap)); render(); };
 $("#delete-selected").onclick = () => { const parent = findParent(state.selectedId); const collection = parent ? parent.children : state.tree; const index = collection.findIndex((node) => node.id === state.selectedId); if (index >= 0 && confirm("Delete the selected item and its children?")) { collection.splice(index, 1); state.selectedId = null; render(); queueSave(); } };
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  const clickedRow = target instanceof Element && target.closest(".node-row");
+  const clickedTable = target instanceof Element && target.closest("table");
+  const clickedButton = target instanceof Element && target.closest("button");
+  if (!clickedRow && !clickedTable && !clickedButton && state.selectedId) {
+    state.selectedId = null;
+    render();
+  }
+});
 const applyTheme = (theme) => {
   const normalizedTheme = theme === "light" ? "light" : "dark";
   document.documentElement.dataset.theme = normalizedTheme;
