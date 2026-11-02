@@ -309,6 +309,10 @@ th {
   box-shadow: inset 3px 0 var(--color-accent);
 }
 
+.node-row.collapsed .recap-line {
+  display: none;
+}
+
 .node-project td:nth-child(2),
 .node-subproject td:nth-child(2) {
   border-left: 3px solid var(--node-color, #6366f1);

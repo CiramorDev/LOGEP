@@ -25,6 +25,7 @@ const state = {
   mtimeNs: null,
   editType: null,
   expanded: new Set(),
+  collapsed: new Set(),
   viewMode: ["all", "incomplete", "collapsed"].includes(savedViewMode) ? savedViewMode : "all",
   showRecap: savedShowRecap === null ? true : savedShowRecap === "true"
 };
@@ -61,12 +62,18 @@ const statusIconElement = (status) => {
   return image;
 };
 const makeField = (tag, value, placeholder, onChange) => { const field = document.createElement(tag); field.value = value || ""; field.placeholder = placeholder; field.onchange = () => onChange(field.value); return field; };
-const resizeNotes = (field) => { field.style.height = "auto"; field.style.height = `${Math.max(34, field.scrollHeight)}px`; };
+const resizeNotes = (field, collapsed = false) => { field.style.height = "auto"; field.style.height = `${collapsed ? 34 : Math.max(34, field.scrollHeight)}px`; };
 const isIncomplete = (node) => node.type === "item" ? !["Done", "Canceled"].includes(node.status) : (node.children || []).some(isIncomplete);
 const expandAll = (nodes) => nodes.forEach((node) => { if (node.children?.length) { state.expanded.add(node.id); expandAll(node.children); } });
+const collapseAll = (nodes) => nodes.forEach((node) => { state.collapsed.add(node.id); collapseAll(node.children || []); });
 const applySavedView = () => {
-  if (state.viewMode === "collapsed") state.expanded.clear();
-  else expandAll(state.tree);
+  if (state.viewMode === "collapsed") {
+    state.expanded.clear();
+    collapseAll(state.tree);
+  } else {
+    expandAll(state.tree);
+    state.collapsed.clear();
+  }
 };
 const recapFor = (node) => {
   const entries = [];
@@ -94,7 +101,8 @@ function render() {
     if (node.type === "project") projects += 1;
     if (node.type === "item") { tasks += 1; if (!["Done", "Canceled"].includes(node.status)) pending += 1; }
     if (!hasMatch(node) || (incomplete && !isIncomplete(node))) return;
-    const row = document.createElement("tr"); row.className = `node-row node-${node.type} ${node.id === state.selectedId ? "selected" : ""}`;
+    const collapsed = state.collapsed.has(node.id);
+    const row = document.createElement("tr"); row.className = `node-row node-${node.type} ${collapsed ? "collapsed" : ""} ${node.id === state.selectedId ? "selected" : ""}`;
     row.onclick = () => selectRow(node.id, row);
 
     const reorderCell = document.createElement("td");
@@ -107,7 +115,29 @@ function render() {
 
     const nameCell = document.createElement("td"); const name = document.createElement("div"); name.className = "node-name"; name.style.setProperty("--indent", `${level * 24}px`);
     const indent = document.createElement("span"); indent.className = "indent"; name.append(indent);
-    if (node.type !== "item") { const toggle = document.createElement("button"); toggle.className = "tree-toggle"; toggle.type = "button"; toggle.title = state.expanded.has(node.id) ? "Collapse" : "Expand"; toggle.append(iconElement(state.expanded.has(node.id) ? "chevronDown" : "chevronRight", state.expanded.has(node.id) ? "⌄" : "›")); toggle.onclick = (event) => { event.stopPropagation(); selectRow(node.id, row); state.expanded.has(node.id) ? state.expanded.delete(node.id) : state.expanded.add(node.id); render(); }; name.append(toggle); } else { const spacer = document.createElement("span"); spacer.className = "tree-toggle-spacer"; name.append(spacer); }
+    if (node.type !== "item") {
+      const toggle = document.createElement("button"); toggle.className = "tree-toggle"; toggle.type = "button";
+      toggle.title = collapsed ? "Expand row" : "Collapse row";
+      toggle.append(iconElement(collapsed ? "chevronRight" : "chevronDown", collapsed ? "›" : "⌄"));
+      toggle.onclick = (event) => {
+        event.stopPropagation(); selectRow(node.id, row);
+        if (collapsed) {
+          state.collapsed.delete(node.id);
+          state.expanded.add(node.id);
+        } else {
+          state.collapsed.add(node.id);
+          state.expanded.delete(node.id);
+        }
+        render();
+      };
+      name.append(toggle);
+    } else {
+      const toggle = document.createElement("button"); toggle.className = "tree-toggle"; toggle.type = "button";
+      toggle.title = collapsed ? "Expand row" : "Collapse row";
+      toggle.append(iconElement(collapsed ? "chevronRight" : "chevronDown", collapsed ? "›" : "⌄"));
+      toggle.onclick = (event) => { event.stopPropagation(); selectRow(node.id, row); collapsed ? state.collapsed.delete(node.id) : state.collapsed.add(node.id); render(); };
+      name.append(toggle);
+    }
     const nodeIcon = document.createElement("span"); nodeIcon.className = "node-icon";
     const nodeColor = node.type === "item" ? "" : gradientFor(node);
     if (nodeColor) {
@@ -121,14 +151,14 @@ function render() {
     const title = makeField("input", node.title, "Name", (value) => updateNode(node.id, "title", value)); title.className = "title-field"; title.onclick = () => selectRow(node.id, row); name.append(title);
     nameCell.append(name); row.append(nameCell);
 
-    const contentCell = document.createElement("td"); const notes = makeField("textarea", node.content, "Add detailed notes…", (value) => updateNode(node.id, "content", value)); notes.className = "notes-field"; notes.rows = 1; notes.onclick = () => selectRow(node.id, row); notes.oninput = () => resizeNotes(notes); contentCell.append(notes);
+    const contentCell = document.createElement("td"); const notes = makeField("textarea", node.content, "Add detailed notes…", (value) => updateNode(node.id, "content", value)); notes.className = "notes-field"; notes.rows = 1; notes.onclick = () => selectRow(node.id, row); notes.oninput = () => resizeNotes(notes, state.collapsed.has(node.id)); contentCell.append(notes);
     const recapText = recapFor(node); if (state.showRecap && recapText) { const recap = document.createElement("div"); recap.className = "recap-line"; recap.textContent = `↳ ${recapText}`; contentCell.append(recap); } row.append(contentCell);
 
     const dateCell = document.createElement("td"); const date = makeField("input", node.date, "", (value) => updateNode(node.id, "date", value)); date.type = "date"; date.className = "date-field"; date.onclick = () => selectRow(node.id, row); dateCell.append(date); row.append(dateCell);
     const statusCell = document.createElement("td"); const status = document.createElement("div"); status.className = `status-cell status-${(node.status || "To Do").toLowerCase().replaceAll(" ", "-")}`;
     status.append(statusIconElement(node.status));
     const select = document.createElement("select"); STATUS_OPTIONS.forEach((option) => select.append(new Option(option, option, false, node.status === option))); select.onchange = () => updateNode(node.id, "status", select.value); select.onclick = () => selectRow(node.id, row); status.append(select); statusCell.append(status); row.append(statusCell);
-    body.append(row); resizeNotes(notes);
+    body.append(row); resizeNotes(notes, collapsed);
     if (node.children?.length && state.expanded.has(node.id)) visit(node.children, level + 1);
   });
   visit(state.tree); $("#empty-state").hidden = body.children.length > 0; $("#project-count").textContent = projects; $("#task-count").textContent = tasks; $("#pending-count").textContent = pending; $("#view-mode").value = state.viewMode; $("#recap-toggle").textContent = state.showRecap ? "Hide recap" : "Show recap"; $("#recap-toggle").setAttribute("aria-label", state.showRecap ? "Hide recaps" : "Show recaps"); updateActions();
@@ -164,6 +194,7 @@ async function openFile(path = null) {
     state.mtimeNs = result.mtime_ns;
     localStorage.setItem("logep.selectedFile", state.file);
     state.expanded = new Set(flatten(state.tree).filter((node) => node.expanded !== false && node.type !== "item").map((node) => node.id));
+    state.collapsed = new Set(flatten(state.tree).filter((node) => node.expanded === false).map((node) => node.id));
     applySavedView();
     $("#file-name").textContent = state.file;
     setStatus("Loaded", "ok");
@@ -185,6 +216,7 @@ async function openCachedFile() {
     state.mtimeNs = result.mtime_ns;
     localStorage.setItem("logep.selectedFile", state.file);
     state.expanded = new Set(flatten(state.tree).filter((node) => node.expanded !== false && node.type !== "item").map((node) => node.id));
+    state.collapsed = new Set(flatten(state.tree).filter((node) => node.expanded === false).map((node) => node.id));
     applySavedView();
     $("#file-name").textContent = state.file;
     setStatus("Loaded", "ok");
@@ -215,8 +247,7 @@ $("#open-file").onclick = () => openFile(); $("#add-project").onclick = () => op
 $("#view-mode").onchange = () => {
   state.viewMode = $("#view-mode").value;
   localStorage.setItem("logep.viewMode", state.viewMode);
-  if (state.viewMode === "collapsed") state.expanded.clear();
-  else expandAll(state.tree);
+  applySavedView();
   render();
 };
 $("#recap-toggle").onclick = () => { state.showRecap = !state.showRecap; localStorage.setItem("logep.showRecap", String(state.showRecap)); render(); };
