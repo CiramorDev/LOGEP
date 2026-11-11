@@ -1,17 +1,17 @@
 /* Global design tokens and status colors. Add new statuses alongside statuses.js. */
 :root {
   color-scheme: dark;
-  --color-bg: #111;
-  --color-surface: #1b1b1b;
-  --color-surface-raised: #242424;
-  --color-border: #3b3b3b;
+  --color-bg: #00050a;
+  --color-surface: #0f1216;
+  --color-surface-raised: #090c0f;
+  --color-border: #3b3b3e;
   --color-text: #f4f4f5;
   --color-muted: #a1a1aa;
   --color-accent: #3b82f6;
   --color-accent-soft: #172554;
   --color-item: #94a3b8;
   --color-item-icon: #cbd5e1;
-  --color-disabled: #4b5563;
+  --color-disabled: #4b5567;
   --shadow-panel: 0 12px 30px #0005;
   --radius-control: 0.5rem;
   --radius-panel: 0.7rem;
@@ -21,9 +21,9 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --color-bg: #f4f4f5;
-  --color-surface: #fff;
-  --color-surface-raised: #e4e4e7;
+  --color-bg: #f3eded;
+  --color-surface: #fff7f7;
+  --color-surface-raised: #ece5e5;
   --color-border: #d4d4d8;
   --color-text: #18181b;
   --color-muted: #52525b;
