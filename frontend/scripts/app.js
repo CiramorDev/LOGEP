@@ -51,6 +51,20 @@ function initialize() {
     }
     addItem(renderWorkspace);
   };
+  $("#edit-dialog").addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && event.target === $("#item-title") && !event.shiftKey) {
+      event.preventDefault();
+      $("#item-content").focus();
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      $("#edit-dialog").close();
+    } else if (event.key === "Enter" && event.shiftKey) {
+      event.preventDefault();
+      $("#edit-form").requestSubmit($("#edit-form button[value='save']"));
+    }
+  });
   $("#search").oninput = renderWorkspace;
   $("#view-mode").onchange = () => {
     state.viewMode = $("#view-mode").value;
