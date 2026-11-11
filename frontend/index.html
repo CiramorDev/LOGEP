@@ -14,18 +14,18 @@
   <link rel="stylesheet" href="/styles/styles.css">
 </head>
 <body>
-  <header class="app-header">
-    <div class="brand">
-      <img src="/assets/logo.svg" alt="Ciramor logo" class="brand-logo">
-      <div><strong>LOGEP</strong><span>Liste Organisée de Gestion de Projets</span></div>
-    </div>
-    <div class="header-actions">
-      <span id="save-status" class="status-dot">Not connected</span>
-      <button id="theme-toggle" class="button button-quiet" type="button" aria-label="Toggle theme">Light mode</button>
-      <button id="open-file" class="button button-primary" type="button">Open JSON file</button>
-    </div>
-  </header>
-  <main class="workspace">
+  <div class="sticky-shell">
+    <header class="app-header">
+      <div class="brand">
+        <img src="/assets/logo.svg" alt="Ciramor logo" class="brand-logo">
+        <div><strong>LOGEP</strong><span>Liste Organisée de Gestion de Projets</span></div>
+      </div>
+      <div class="header-actions">
+        <span id="save-status" class="status-dot">Not connected</span>
+        <button id="theme-toggle" class="button button-quiet" type="button" aria-label="Toggle theme">Light mode</button>
+        <button id="open-file" class="button button-primary" type="button">Open JSON file</button>
+      </div>
+    </header>
     <section class="toolbar" aria-label="Project actions">
       <div class="toolbar-group">
         <button id="add-project" class="button button-primary" type="button">+ Project</button>
@@ -43,6 +43,8 @@
         <button id="recap-toggle" class="button button-quiet" type="button" aria-label="Hide recaps">Hide recap</button>
       </div>
     </section>
+  </div>
+  <main class="workspace">
     <section class="summary" aria-label="Workspace summary">
       <div><strong id="project-count">0</strong><span>Projects</span></div>
       <div><strong id="task-count">0</strong><span>Tasks</span></div>
