@@ -64,6 +64,22 @@ function initialize() {
     renderWorkspace();
   };
   $("#delete-selected").onclick = () => deleteSelected(renderWorkspace);
+  document.addEventListener("keydown", (event) => {
+    const target = event.target;
+    const isEditing =
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      (target instanceof Element && target.closest("#edit-dialog"));
+    if (
+      event.key === "Delete" &&
+      !isEditing &&
+      !$("#delete-selected").disabled
+    ) {
+      event.preventDefault();
+      deleteSelected(renderWorkspace);
+    }
+  });
   document.addEventListener("click", (event) => {
     const target = event.target;
     if (target instanceof Element && target.closest("#edit-dialog")) return;
