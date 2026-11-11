@@ -21,6 +21,16 @@ pytest is not installed:
 python -m unittest discover -s . -p "test_*.py"
 ```
 
+Frontend JavaScript tests use Vitest for unit tests and Playwright for browser
+functional tests:
+
+```powershell
+npm install
+npm run test:unit
+npx playwright install chromium
+npm run test:functional
+```
+
 Choose a JSON file with **Open JSON file**. LOGEP creates a `.logep-backups` directory beside it, makes a backup on open, and exposes the backup endpoint for hourly scheduling. The frontend autosaves 700 ms after edits. External changes are detected and autosave is paused with an error.
 
 ## Structure
