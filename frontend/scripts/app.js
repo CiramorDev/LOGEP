@@ -21,7 +21,7 @@ import { applySavedView } from "./tree.js";
 function renderWorkspace() {
   render({
     render: renderWorkspace,
-    selectRow: (id, row) => selectRow(id, row, updateActions),
+    selectRow: (id, row, event) => selectRow(id, row, event, updateActions),
     moveNode: (id, offset) => moveNode(id, offset, renderWorkspace),
     updateNode: (id, key, value) => updateNode(id, key, value, renderWorkspace),
     updateActions,
@@ -70,7 +70,13 @@ function initialize() {
     const clickedRow = target instanceof Element && target.closest(".node-row");
     const clickedTable = target instanceof Element && target.closest("table");
     const clickedButton = target instanceof Element && target.closest("button");
-    if (!clickedRow && !clickedTable && !clickedButton && state.selectedId) {
+    if (
+      !clickedRow &&
+      !clickedTable &&
+      !clickedButton &&
+      state.selectedIds.size > 0
+    ) {
+      state.selectedIds.clear();
       state.selectedId = null;
       renderWorkspace();
     }

@@ -37,10 +37,11 @@ function statusIconElement(statusName) {
 function createRow(node, level, actions) {
   const collapsed = state.collapsed.has(node.id);
   const row = document.createElement("tr");
+  row.dataset.nodeId = node.id;
   row.className = `node-row node-${node.type} ${
     collapsed ? "collapsed" : ""
-  } ${node.id === state.selectedId ? "selected" : ""}`;
-  row.onclick = () => actions.selectRow(node.id, row);
+  } ${state.selectedIds.has(node.id) ? "selected" : ""}`;
+  row.onclick = (event) => actions.selectRow(node.id, row, event);
 
   const reorderCell = document.createElement("td");
   const reorderControls = document.createElement("div");
@@ -60,7 +61,7 @@ function createRow(node, level, actions) {
     button.append(iconElement(direction, label));
     button.onclick = (event) => {
       event.stopPropagation();
-      actions.selectRow(node.id, row);
+      actions.selectRow(node.id, row, event);
       actions.moveNode(node.id, offset);
     };
     reorderControls.append(button);
@@ -86,7 +87,7 @@ function createRow(node, level, actions) {
   );
   toggle.onclick = (event) => {
     event.stopPropagation();
-    actions.selectRow(node.id, row);
+    actions.selectRow(node.id, row, event);
     if (collapsed) {
       state.collapsed.delete(node.id);
       state.expanded.add(node.id);
@@ -121,7 +122,6 @@ function createRow(node, level, actions) {
     (value) => actions.updateNode(node.id, "title", value)
   );
   title.className = "title-field";
-  title.onclick = () => actions.selectRow(node.id, row);
   name.append(title);
   nameCell.append(name);
   row.append(nameCell);
@@ -135,7 +135,6 @@ function createRow(node, level, actions) {
   );
   notes.className = "notes-field";
   notes.rows = 1;
-  notes.onclick = () => actions.selectRow(node.id, row);
   notes.oninput = () => resizeNotes(notes, collapsed);
   contentCell.append(notes);
   const recapText = recapFor(node);
@@ -156,7 +155,6 @@ function createRow(node, level, actions) {
   );
   date.type = "date";
   date.className = "date-field";
-  date.onclick = () => actions.selectRow(node.id, row);
   dateCell.append(date);
   row.append(dateCell);
 
@@ -170,7 +168,6 @@ function createRow(node, level, actions) {
     select.append(new Option(option.name, option.name, false, node.status === option.name))
   );
   select.onchange = () => actions.updateNode(node.id, "status", select.value);
-  select.onclick = () => actions.selectRow(node.id, row);
   statusControl.append(select);
   statusCell.append(statusControl);
   row.append(statusCell);

@@ -2,6 +2,7 @@
 export const state = {
   tree: [],
   selectedId: null,
+  selectedIds: new Set(),
   file: null,
   mtimeNs: null,
   editType: null,

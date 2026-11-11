@@ -1,7 +1,7 @@
 import { STATUS_OPTIONS } from "./statuses.js";
 import { $, setStatus } from "./dom.js";
 import { state } from "./state.js";
-import { findNode, findParent, siblingsFor } from "./tree.js";
+import { findNode, siblingsFor } from "./tree.js";
 import { queueSave } from "./file-actions.js";
 
 /** Update one node field and schedule persistence. */
@@ -25,22 +25,51 @@ export function moveNode(id, offset, render) {
 }
 
 /** Select a row and synchronize toolbar action availability. */
-export function selectRow(id, row, updateActions) {
+export function selectRow(id, row, event, updateActions) {
+  const isMultiSelect = event?.ctrlKey || event?.metaKey;
+  const rows = [...document.querySelectorAll(".node-row")];
+  const clickedIndex = rows.indexOf(row);
+
+  if (event?.shiftKey && state.selectedId && clickedIndex >= 0) {
+    const anchorRow = rows.find(
+      (candidate) => candidate.dataset.nodeId === state.selectedId
+    );
+    const anchorIndex = rows.indexOf(anchorRow);
+    if (anchorIndex >= 0) {
+      const start = Math.min(anchorIndex, clickedIndex);
+      const end = Math.max(anchorIndex, clickedIndex);
+      state.selectedIds = new Set(
+        rows.slice(start, end + 1).map((candidate) => candidate.dataset.nodeId)
+      );
+    }
+  } else if (isMultiSelect) {
+    state.selectedIds.add(id);
+  } else {
+    state.selectedIds = new Set([id]);
+  }
   state.selectedId = id;
   document
     .querySelectorAll(".node-row.selected")
     .forEach((selectedRow) => selectedRow.classList.remove("selected"));
-  row.classList.add("selected");
+  document.querySelectorAll(".node-row").forEach((candidate) => {
+    if (state.selectedIds.has(candidate.dataset.nodeId)) {
+      candidate.classList.add("selected");
+    }
+  });
   updateActions();
 }
 
 /** Update toolbar buttons according to the selected node type. */
 export function updateActions() {
   const selected = findNode(state.selectedId);
+  const hasMultipleSelections = state.selectedIds.size > 1;
   $("#add-subproject").disabled =
-    !selected || !["project", "subproject"].includes(selected.type);
-  $("#add-item").disabled = !selected || selected.type === "item";
-  $("#delete-selected").disabled = !selected;
+    hasMultipleSelections ||
+    !selected ||
+    !["project", "subproject"].includes(selected.type);
+  $("#add-item").disabled =
+    hasMultipleSelections || !selected || selected.type === "item";
+  $("#delete-selected").disabled = state.selectedIds.size === 0;
 }
 
 /** Open the add-item dialog for a project, sub-project, or task. */
@@ -60,6 +89,7 @@ export function openEditor(type) {
 
 /** Add the dialog's new node at the selected tree location. */
 export function addItem(render) {
+  if (state.selectedIds.size > 1) return;
   const parent = findNode(state.selectedId);
   const node = {
     id: crypto.randomUUID(),
@@ -87,13 +117,29 @@ export function addItem(render) {
   queueSave();
 }
 
-/** Delete the selected node after explicit user confirmation. */
+/** Delete all selected nodes and their children after explicit confirmation. */
 export function deleteSelected(render) {
-  const parent = findParent(state.selectedId);
-  const collection = parent ? parent.children : state.tree;
-  const index = collection.findIndex((node) => node.id === state.selectedId);
-  if (index >= 0 && confirm("Delete the selected item and its children?")) {
-    collection.splice(index, 1);
+  const selectedIds = new Set(state.selectedIds);
+  if (
+    selectedIds.size > 0 &&
+    confirm(
+      selectedIds.size === 1
+        ? "Delete the selected item and its children?"
+        : "Delete all selected items and their children?"
+    )
+  ) {
+    const removeSelected = (nodes) => {
+      for (let index = nodes.length - 1; index >= 0; index -= 1) {
+        const node = nodes[index];
+        if (selectedIds.has(node.id)) {
+          nodes.splice(index, 1);
+          continue;
+        }
+        if (node.children?.length) removeSelected(node.children);
+      }
+    };
+    removeSelected(state.tree);
+    state.selectedIds.clear();
     state.selectedId = null;
     render();
     queueSave();
