@@ -1,0 +1,40 @@
+/* Project tree table, editable cells, and ordering controls. */
+.table-wrap {
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
+}
+table { width: 100%; min-width: 1100px; border-collapse: collapse; table-layout: fixed; }
+.reorder-column { width: 58px; }
+.name-column { width: 29%; }
+.date-column { width: 160px; }
+.status-column { width: 210px; }
+th, td { padding: 0.6rem; border-bottom: 1px solid var(--color-border); text-align: left; vertical-align: top; }
+th { background: var(--color-surface-raised); color: var(--color-muted); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.node-row { transition: background 0.15s ease; }
+.node-row:hover { background: color-mix(in srgb, var(--color-accent-soft) 35%, transparent); }
+.node-row.selected { background: var(--color-accent-soft); box-shadow: inset 3px 0 var(--color-accent); }
+.node-row.collapsed .recap-line { display: none; }
+.node-project td:nth-child(2), .node-subproject td:nth-child(2) { border-left: 3px solid var(--node-color, #6366f1); }
+.node-item td:nth-child(2) { border-left: 3px solid var(--color-item); }
+.reorder-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 42px; }
+.reorder-button { width: 100%; height: 50%; padding: 0; border: 0; border-radius: 0.25rem; background: transparent; color: var(--color-muted); }
+.reorder-button:hover:not(:disabled) { background: var(--color-surface-raised); color: var(--color-text); }
+.reorder-button:disabled { color: var(--color-disabled); }
+.node-name { display: flex; align-items: center; gap: 0.45rem; min-height: 42px; padding-left: var(--indent); }
+.indent { display: inline-block; width: 0; }
+.tree-toggle { display: grid; place-items: center; width: 100%; height: 100%; flex: 0 0 24px; border: 0; border-radius: 0.3rem; background: transparent; color: var(--color-muted); }
+.tree-toggle:hover { background: var(--color-surface-raised); color: var(--color-text); }
+.node-icon { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 0.45rem; background: color-mix(in srgb, var(--node-color, #6366f1) 25%, var(--color-surface-raised)); color: var(--node-color, #a5b4fc); }
+.node-icon .ui-icon { width: 19px; height: 19px; }
+.node-item .node-icon { background: #292929; color: var(--color-item-icon); }
+.title-field, td input, td select, td textarea { width: 100%; padding: 0.35rem; border-color: transparent; background: transparent; }
+td input:focus, td select:focus, td textarea:focus { border-color: var(--color-accent); outline: none; }
+.title-field { min-width: 0; font-weight: 600; }
+.node-subproject .title-field { font-weight: 500; }
+.node-item .title-field { font-weight: 400; }
+.notes-field { display: block; min-height: 34px; overflow: hidden; line-height: 1.35; resize: none; }
+.recap-line { padding: 0.2rem 0.4rem 0.1rem 2.45rem; color: var(--color-muted); font-size: 0.75rem; line-height: 1.35; }
+.date-field { min-width: 125px; }

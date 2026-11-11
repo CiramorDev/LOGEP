@@ -1,0 +1,16 @@
+/* Reset, typography, and shared document elements. */
+* { box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: 0.45; }
+footer, .brand span, .summary span, .summary p {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+}

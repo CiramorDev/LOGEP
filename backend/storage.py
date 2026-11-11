@@ -18,6 +18,7 @@ MAX_BACKUPS = 5
 
 
 def _utc_stamp() -> str:
+    """Return a filesystem-safe UTC timestamp for backup names."""
     return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
@@ -50,11 +51,13 @@ def _validate_payload(payload: object) -> ProjectTree:
 
 
 def read_file(path: Path) -> ProjectTree:
+    """Read and validate one JSON project tree."""
     with path.open("r", encoding="utf-8") as handle:
         return _validate_payload(json.load(handle))
 
 
 def backup_file(path: Path) -> None:
+    """Create a backup and retain only the newest configured copies."""
     if not path.exists():
         return
     directory = path.parent / BACKUP_DIRECTORY_NAME
@@ -71,6 +74,7 @@ def backup_file(path: Path) -> None:
 
 
 def atomic_write(path: Path, payload: object) -> None:
+    """Validate and replace a JSON file atomically."""
     path.parent.mkdir(parents=True, exist_ok=True)
     encoded = json.dumps(_validate_payload(payload), indent=2, ensure_ascii=False) + "\n"
     descriptor, temporary_name = tempfile.mkstemp(

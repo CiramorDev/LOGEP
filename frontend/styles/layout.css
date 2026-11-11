@@ -1,0 +1,45 @@
+/* Header, toolbar, summary, and responsive workspace layout. */
+.app-header, .brand, .header-actions, .toolbar, .toolbar-group,
+.summary, .form-grid, .dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.app-header, .toolbar { justify-content: space-between; }
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.workspace { width: 100%; padding: 1.5rem 2rem; }
+.toolbar { flex-wrap: wrap; margin-bottom: 1rem; }
+.brand strong, .brand span { display: block; }
+.brand strong { letter-spacing: 0.1em; }
+.brand-logo { width: 36px; height: 36px; object-fit: contain; filter: brightness(0) invert(1); }
+.summary {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+}
+.summary div { min-width: 100px; border-right: 1px solid var(--color-border); }
+.summary strong, .summary span { display: block; }
+.summary strong { font-size: 1.4rem; }
+.summary p {
+  max-width: 45%;
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+footer { padding: 1.5rem; text-align: center; }
+@media (max-width: 700px) {
+  .app-header, .workspace { padding: 1rem; }
+  .header-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .summary { flex-wrap: wrap; }
+  .summary p { width: 100%; max-width: none; margin: 0; }
+}

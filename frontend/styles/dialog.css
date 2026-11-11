@@ -1,0 +1,11 @@
+/* Empty state and add-item dialog. */
+.empty-state { padding: 3rem; color: var(--color-muted); text-align: center; }
+dialog { width: min(500px, calc(100% - 2rem)); border: 1px solid var(--color-border); border-radius: 0.75rem; background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-panel); }
+dialog::backdrop { background: #0009; }
+form { display: grid; gap: 1rem; }
+form h2 { margin: 0; }
+form label { display: grid; gap: 0.4rem; color: var(--color-muted); font-size: 0.82rem; }
+textarea { resize: vertical; }
+.form-grid { align-items: stretch; }
+.form-grid > * { flex: 1; }
+.dialog-actions { justify-content: flex-end; }

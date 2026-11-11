@@ -25,11 +25,17 @@ Choose a JSON file with **Open JSON file**. LOGEP creates a `.logep-backups` dir
 
 ## Structure
 
-- `backend/server.py`: local HTTP server, native file picker, and session/file API.
+- `backend/server.py`: local HTTP server bootstrap and request handler.
+- `backend/configuration.py`: frontend and local configuration paths.
+- `backend/state.py`: per-server selected-file state.
+- `backend/routes.py`: grouped GET and POST route actions.
+- `backend/file_actions.py`: native picker, cache, open, save, and backup actions.
+- `backend/http_actions.py`: JSON and static-file response helpers.
 - `backend/storage.py`: recursive project-tree validation, atomic writes, and backup rotation.
 - `frontend/index.html`: semantic application shell.
-- `frontend/assets/app.js`: state, rendering, editing, search, filters, and autosave.
-- `frontend/assets/styles.css`: responsive grayscale/blue light and dark themes.
+- `frontend/scripts/`: application JavaScript modules grouped by responsibility.
+- `frontend/styles/`: stylesheet entry point and focused style layers.
+- `frontend/assets/`: images, logos, and icons only.
 
 The LLM integration is intentionally not implemented yet. Future adapters should be added behind a backend allowlist rather than exposing credentials in the browser.
 

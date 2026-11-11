@@ -1,0 +1,46 @@
+/* Global design tokens and status colors. Add new statuses alongside statuses.js. */
+:root {
+  color-scheme: dark;
+  --color-bg: #111;
+  --color-surface: #1b1b1b;
+  --color-surface-raised: #242424;
+  --color-border: #3b3b3b;
+  --color-text: #f4f4f5;
+  --color-muted: #a1a1aa;
+  --color-accent: #3b82f6;
+  --color-accent-soft: #172554;
+  --color-item: #94a3b8;
+  --color-item-icon: #cbd5e1;
+  --color-disabled: #4b5563;
+  --shadow-panel: 0 12px 30px #0005;
+  --radius-control: 0.5rem;
+  --radius-panel: 0.7rem;
+  --space-control-y: 0.55rem;
+  --space-control-x: 0.8rem;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f4f4f5;
+  --color-surface: #fff;
+  --color-surface-raised: #e4e4e7;
+  --color-border: #d4d4d8;
+  --color-text: #18181b;
+  --color-muted: #52525b;
+  --color-accent-soft: #dbeafe;
+  --shadow-panel: 0 12px 30px #0001;
+}
+
+.status-to-do { --status-bg: #451a03; --status-color: #fbbf24; --status-border: #92400e; }
+.status-waiting-for-approval { --status-bg: #3b0764; --status-color: #d8b4fe; --status-border: #7e22ce; }
+.status-waiting-for-reply { --status-bg: #082f49; --status-color: #7dd3fc; --status-border: #0369a1; }
+.status-frozen { --status-bg: #083344; --status-color: #67e8f9; --status-border: #0e7490; }
+.status-done { --status-bg: #052e16; --status-color: #86efac; --status-border: #15803d; }
+.status-canceled { --status-bg: #450a0a; --status-color: #fca5a5; --status-border: #b91c1c; }
+
+:root[data-theme="light"] .status-to-do { --status-bg: #fef3c7; --status-color: #92400e; --status-border: #f59e0b; }
+:root[data-theme="light"] .status-waiting-for-approval { --status-bg: #f3e8ff; --status-color: #7e22ce; --status-border: #c084fc; }
+:root[data-theme="light"] .status-waiting-for-reply { --status-bg: #e0f2fe; --status-color: #0369a1; --status-border: #38bdf8; }
+:root[data-theme="light"] .status-frozen { --status-bg: #cffafe; --status-color: #0e7490; --status-border: #22d3ee; }
+:root[data-theme="light"] .status-done { --status-bg: #dcfce7; --status-color: #166534; --status-border: #4ade80; }
+:root[data-theme="light"] .status-canceled { --status-bg: #fee2e2; --status-color: #b91c1c; --status-border: #f87171; }
