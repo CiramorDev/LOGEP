@@ -253,7 +253,7 @@ function addItem() {
   render();
   queueSave();
 }
-$("#open-file").onclick = () => openFile(); $("#add-project").onclick = () => openEditor("project"); $("#add-subproject").onclick = () => openEditor("subproject"); $("#add-item").onclick = () => openEditor("item"); $("#edit-form").onsubmit = (event) => { event.preventDefault(); addItem(); }; $("#search").oninput = render;
+$("#open-file").onclick = () => openFile(); $("#add-project").onclick = () => openEditor("project"); $("#add-subproject").onclick = () => openEditor("subproject"); $("#add-item").onclick = () => openEditor("item"); $("#edit-form").onsubmit = (event) => { event.preventDefault(); if (event.submitter?.value === "cancel") { $("#edit-dialog").close(); return; } addItem(); }; $("#search").oninput = render;
 $("#view-mode").onchange = () => {
   state.viewMode = $("#view-mode").value;
   localStorage.setItem("logep.viewMode", state.viewMode);

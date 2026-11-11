@@ -7,81 +7,48 @@ The server deliberately uses only Python's standard library. It binds to
 from __future__ import annotations
 
 import json
-import os
-import shutil
-import tempfile
 import threading
 import tkinter as tk
-from datetime import datetime, timezone
+from dataclasses import dataclass, field
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from tkinter import filedialog
 from urllib.parse import parse_qs, unquote, urlparse
 
+from .storage import atomic_write, backup_file, read_file
+
 ROOT = Path(__file__).resolve().parents[1]
 FRONTEND = ROOT / "frontend"
 CONFIGURATION_DIRECTORY = ROOT / ".local"
 CACHED_FILE_PATH = CONFIGURATION_DIRECTORY / "selected-file.txt"
-BACKUP_DIRECTORY_NAME = ".logep-backups"
-MAX_BACKUPS = 5
-_state_lock = threading.Lock()
-_selected_file: Path | None = None
-_selected_mtime_ns: int | None = None
+@dataclass
+class ServerState:
+    """Mutable file session state shared by request handlers."""
+
+    lock: threading.Lock = field(default_factory=threading.Lock)
+    selected_file: Path | None = None
+    selected_mtime_ns: int | None = None
 
 
-def _utc_stamp() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+class LogepServer(ThreadingHTTPServer):
+    """HTTP server carrying isolated application state for each instance."""
 
-
-def _validate_payload(payload: object) -> list[dict]:
-    if not isinstance(payload, list):
-        raise ValueError("The LOGEP data must be a JSON array.")
-    for node in payload:
-        if not isinstance(node, dict):
-            raise ValueError("Every project entry must be an object.")
-        if not isinstance(node.get("id"), str) or not node["id"]:
-            raise ValueError("Every entry must have a non-empty string id.")
-        if node.get("type") not in {"project", "subproject", "item"}:
-            raise ValueError("Every entry must have a supported type.")
-        if not isinstance(node.get("children", []), list):
-            raise ValueError("Every entry's children must be an array.")
-    return payload
+    def __init__(self, address: tuple[str, int], handler: type[BaseHTTPRequestHandler]):
+        super().__init__(address, handler)
+        self.state = ServerState()
 
 
 def _read_file(path: Path) -> list[dict]:
-    with path.open("r", encoding="utf-8") as handle:
-        return _validate_payload(json.load(handle))
+    return read_file(path)
 
 
 def _backup_file(path: Path) -> None:
-    if not path.exists():
-        return
-    directory = path.parent / BACKUP_DIRECTORY_NAME
-    directory.mkdir(exist_ok=True)
-    destination = directory / f"{path.stem}.{_utc_stamp()}{path.suffix}"
-    shutil.copy2(path, destination)
-    backups = sorted(directory.glob(f"{path.stem}.*{path.suffix}"), key=lambda item: item.stat().st_mtime_ns, reverse=True)
-    for old_backup in backups[MAX_BACKUPS:]:
-        old_backup.unlink()
+    backup_file(path)
 
 
 def _atomic_write(path: Path, payload: list[dict]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    encoded = json.dumps(_validate_payload(payload), indent=2, ensure_ascii=False) + "\n"
-    descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
-    try:
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(encoded)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary_name, path)
-    except Exception:
-        try:
-            os.unlink(temporary_name)
-        except FileNotFoundError:
-            pass
-        raise
+    atomic_write(path, payload)
 
 
 def choose_file() -> Path | None:
@@ -130,9 +97,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         path = urlparse(self.path).path
         if path == "/api/state":
-            with _state_lock:
-                selected = _selected_file
-                mtime = _selected_mtime_ns
+            with self.server.state.lock:
+                selected = self.server.state.selected_file
+                mtime = self.server.state.selected_mtime_ns
             _json_response(self, HTTPStatus.OK, {"file": str(selected) if selected else None, "mtime_ns": mtime})
             return
         if path == "/api/open":
@@ -173,9 +140,9 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(length))
             if path == "/api/backup":
-                with _state_lock:
-                    if _selected_file:
-                        _backup_file(_selected_file)
+                with self.server.state.lock:
+                    if self.server.state.selected_file:
+                        _backup_file(self.server.state.selected_file)
                 _json_response(self, HTTPStatus.OK, {"ok": True})
                 return
             self._save_file(payload)
@@ -189,7 +156,6 @@ class Handler(BaseHTTPRequestHandler):
             _json_response(self, HTTPStatus.INTERNAL_SERVER_ERROR, {"error": f"File operation failed: {error}"})
 
     def _open_file(self, requested: Path | None = None) -> None:
-        global _selected_file, _selected_mtime_ns
         try:
             selected = requested or choose_file()
             if selected is None:
@@ -199,27 +165,36 @@ class Handler(BaseHTTPRequestHandler):
                 _json_response(self, HTTPStatus.NOT_FOUND, {"error": "The cached project file is no longer available."})
                 return
             payload = _read_file(selected) if selected.exists() and selected.stat().st_size else []
-            with _state_lock:
-                _selected_file = selected
-                _selected_mtime_ns = selected.stat().st_mtime_ns if selected.exists() else None
+            with self.server.state.lock:
+                self.server.state.selected_file = selected
+                self.server.state.selected_mtime_ns = selected.stat().st_mtime_ns if selected.exists() else None
             _cache_path(selected)
             _backup_file(selected)
-            _json_response(self, HTTPStatus.OK, {"file": str(selected), "mtime_ns": _selected_mtime_ns, "data": payload})
+            _json_response(
+                self,
+                HTTPStatus.OK,
+                {
+                    "file": str(selected),
+                    "mtime_ns": self.server.state.selected_mtime_ns,
+                    "data": payload,
+                },
+            )
         except (json.JSONDecodeError, ValueError) as error:
             _json_response(self, HTTPStatus.UNPROCESSABLE_ENTITY, {"error": f"Invalid LOGEP JSON: {error}"})
         except OSError as error:
             _json_response(self, HTTPStatus.INTERNAL_SERVER_ERROR, {"error": f"Could not open file: {error}"})
 
     def _save_file(self, payload: object) -> None:
-        global _selected_mtime_ns
-        with _state_lock:
-            if _selected_file is None:
+        with self.server.state.lock:
+            if self.server.state.selected_file is None:
                 raise ValueError("Choose a project file before saving.")
-            if _selected_file.exists() and _selected_mtime_ns != _selected_file.stat().st_mtime_ns:
+            selected = self.server.state.selected_file
+            if selected.exists() and self.server.state.selected_mtime_ns != selected.stat().st_mtime_ns:
                 raise FileExistsError("The file changed outside LOGEP. Reload it before saving.")
-            _atomic_write(_selected_file, payload)
-            _selected_mtime_ns = _selected_file.stat().st_mtime_ns
-        _json_response(self, HTTPStatus.OK, {"ok": True, "mtime_ns": _selected_mtime_ns})
+            _atomic_write(selected, payload)
+            self.server.state.selected_mtime_ns = selected.stat().st_mtime_ns
+            mtime = self.server.state.selected_mtime_ns
+        _json_response(self, HTTPStatus.OK, {"ok": True, "mtime_ns": mtime})
 
     def _serve_file(self, path: Path, content_type: str) -> None:
         data = path.read_bytes()
@@ -231,7 +206,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def run(port: int = 8765) -> None:
-    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    server = LogepServer(("127.0.0.1", port), Handler)
     print(f"LOGEP running at http://127.0.0.1:{port}")
     try:
         server.serve_forever()
