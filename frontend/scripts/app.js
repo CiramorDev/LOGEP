@@ -66,6 +66,7 @@ function initialize() {
   $("#delete-selected").onclick = () => deleteSelected(renderWorkspace);
   document.addEventListener("click", (event) => {
     const target = event.target;
+    if (target instanceof Element && target.closest("#edit-dialog")) return;
     const clickedRow = target instanceof Element && target.closest(".node-row");
     const clickedTable = target instanceof Element && target.closest("table");
     const clickedButton = target instanceof Element && target.closest("button");

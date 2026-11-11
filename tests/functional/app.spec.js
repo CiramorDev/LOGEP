@@ -28,6 +28,26 @@ test("creates a project and task through the editor", async ({ page }) => {
   await expect(page.locator("#pending-count")).toHaveText("0");
 });
 
+test("keeps the selected row while interacting with the creation dialog", async ({
+  page,
+}) => {
+  await page.getByRole("button", { name: "+ Project" }).click();
+  await page.locator("#item-title").fill("Release planning");
+  await page.getByRole("button", { name: "Save" }).click();
+
+  const row = page.locator(".node-row");
+  await row.click();
+  await expect(row).toHaveClass(/selected/);
+
+  await page.getByRole("button", { name: "+ Task / meeting" }).click();
+  await page.locator("#item-title").click();
+  await page.locator("#item-content").click();
+  await page.locator("#item-date").click();
+  await page.locator("#item-status").click();
+
+  await expect(row).toHaveClass(/selected/);
+});
+
 test("filters rows and toggles the saved view and theme", async ({ page }) => {
   await page.getByRole("button", { name: "+ Project" }).click();
   await page.locator("#item-title").fill("Visible project");
